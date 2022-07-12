@@ -5,11 +5,23 @@ from matplotlib import pyplot
 from matplotlib.pyplot import figure
 from matplotlib import cm
 import numpy as np
+import sys 
 
 # storing the session specificities 
 YEAR = 2022
-GP = "Austria"
-DRIVERS = ['HAM', 'LEC', 'VER']
+if '-y' or '--year' in sys.argv :
+    arg = '-y' if '-y' in sys.argv else '--year'
+    YEAR = int(sys.argv[sys.argv.index(arg) + 1])
+
+arg_track = '-t' if '-t' in sys.argv else '--track'
+GP = sys.argv[sys.argv.index(arg_track) + 1]
+
+DRIVERS = None
+if '-d' in sys.argv or '--drivers' in sys.argv:
+    arg = '-d' if '-d' in sys.argv else '--drivers'
+    DRIVERS = [txt.upper() for txt in sys.argv[sys.argv.index(arg) + 1].split(",")] 
+else:
+    DRIVERS = ['HAM', 'RUS', 'VER', 'PER', 'LEC', 'SAI', 'OCO', 'ALO', 'NOR', 'RIC', 'MSC', 'MAG', 'ALB', 'LAT', 'VET', 'STR']
 
 # enabling the cache 
 ff.Cache.enable_cache('.cache/')
@@ -70,6 +82,9 @@ for driver in drivers:
     if team not in teams:
         teams.append(team)
 
+if '-s' or '--save' in sys.argv:
+    pyplot.savefig(f"{GP}-{YEAR}-racepace.png", dpi=300)       
 
+if 'Haas F1 Team' in teams:
+    ax[1].set_facecolor("grey")
 pyplot.show()
-
