@@ -6,28 +6,49 @@ from matplotlib.pyplot import figure
 from matplotlib import cm
 import numpy as np
 import sys 
+import os 
+from datetime import datetime as dt
 
-# storing the session specificities 
+
+def get_latest_race_name(schedule):
+    """
+    Given a schedule, return the name of the latest race that has already happened.
+    :param schedule: the schedule dataframe
+    :return: The latest race name.
+    """
+    today_date = dt.now()
+    latest = None 
+    for _, event in schedule.iterrows():
+        if event['EventDate'] < today_date:
+            latest = event 
+        else:
+            return latest['EventName']
+
+
+# enabling the ff1 cache
+done = False
+while not done:
+    try:
+        ff.Cache.enable_cache('.cache/')
+        done = True
+    except NotADirectoryError:
+        os.mkdir('.cache')
+        
+# avoid pandas error
+pd.options.mode.chained_assignment = None
+
+# retrieving the session specificities from cli args : year and track
 YEAR = 2022
-if '-y' or '--year' in sys.argv :
+if '-y' in sys.argv or '--year' in sys.argv :
     arg = '-y' if '-y' in sys.argv else '--year'
     YEAR = int(sys.argv[sys.argv.index(arg) + 1])
 
-arg_track = '-t' if '-t' in sys.argv else '--track'
-GP = sys.argv[sys.argv.index(arg_track) + 1]
-
-DRIVERS = None
-if '-d' in sys.argv or '--drivers' in sys.argv:
-    arg = '-d' if '-d' in sys.argv else '--drivers'
-    DRIVERS = [txt.upper() for txt in sys.argv[sys.argv.index(arg) + 1].split(",")] 
+GP = None
+if '-t' in sys.argv or '--track' in sys.argv:
+    arg_track = '-t' if '-t' in sys.argv else '--track'
+    GP = sys.argv[sys.argv.index(arg_track) + 1]
 else:
-    DRIVERS = ['HAM', 'RUS', 'VER', 'PER', 'LEC', 'SAI', 'OCO', 'ALO', 'NOR', 'RIC', 'MSC', 'MAG', 'ALB', 'LAT', 'VET', 'STR']
-
-# enabling the cache 
-ff.Cache.enable_cache('.cache/')
-
-# avoid pandas error 
-pd.options.mode.chained_assignment = None 
+    GP = get_latest_race_name(ff.get_event_schedule(YEAR))
 
 # load session data / convert laptimes to seconds  
 race = ff.get_session(YEAR, GP, 'R')
@@ -46,6 +67,20 @@ laptime_min = q25 - (1.5 * inter)
 
 laps.loc[laps['LapTimeSeconds'] < laptime_min, 'LapTimeSeconds'] = np.nan
 laps.loc[laps['LapTimeSeconds'] > laptime_max, 'LapTimeSeconds'] = np.nan
+
+# drivers to display
+DRIVERS = []
+if '-df' in sys.argv or '--drivers-file' in sys.argv:
+    arg = '-df' if '-df' in sys.argv else '--drivers-file'
+    filename = sys.argv[sys.argv.index(arg) + 1]
+    with open(filename, mode='r') as drivers_file:
+        for line in drivers_file.readlines():
+            DRIVERS.append(line.strip().upper())
+elif '-d' in sys.argv or '--drivers' in sys.argv:
+    arg = '-d' if '-d' in sys.argv else '--drivers'
+    DRIVERS = [txt.upper() for txt in sys.argv[sys.argv.index(arg) + 1].split(",")]
+else:
+    DRIVERS = [driver['Abbreviation'] for _, driver in race.results.iterrows()]
 
 # plotting 
 drivers = [driver for driver in DRIVERS]
@@ -82,9 +117,21 @@ for driver in drivers:
     if team not in teams:
         teams.append(team)
 
-if '-s' or '--save' in sys.argv:
-    pyplot.savefig(f"{GP}-{YEAR}-racepace.png", dpi=300)       
-
 if 'Haas F1 Team' in teams:
     ax[1].set_facecolor("grey")
+    
+fig.suptitle(f"{race.event['EventName']}")
+
+# save the plot in an image if the user says so 
+if '-s' or '--save' in sys.argv:
+    # if the -n or --name option is given, sets the filename to it, 
+    # default filename is country-sessiontype-year.png (e.g. austria-race-2022.png)
+    filename = ""
+    if '-n' in sys.argv or '--name' in sys.argv:
+        arg = '-n' if '-n' in sys.argv else '--name'
+        filename = f"{sys.argv[sys.argv.index(arg) + 1]}.png"
+    else:
+        filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
+        
+    pyplot.savefig(filename, dpi=300)
 pyplot.show()
