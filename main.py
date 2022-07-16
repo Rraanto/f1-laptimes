@@ -8,6 +8,7 @@ import numpy as np
 import sys 
 import os 
 from datetime import datetime as dt
+import argparse
 
 
 def get_latest_race_name(schedule):
@@ -17,10 +18,10 @@ def get_latest_race_name(schedule):
     :return: The latest race name.
     """
     today_date = dt.now()
-    latest = None 
+    latest = None
     for _, event in schedule.iterrows():
         if event['EventDate'] < today_date:
-            latest = event 
+            latest = event
         else:
             return latest['EventName']
 
@@ -32,26 +33,39 @@ while not done:
         ff.Cache.enable_cache('.cache/')
         done = True
     except NotADirectoryError:
-        os.mkdir('.cache')
-        
+        os.mkdir
+
 # avoid pandas error
 pd.options.mode.chained_assignment = None
 
-# retrieving the session specificities from cli args : year and track
-YEAR = 2022
-if '-y' in sys.argv or '--year' in sys.argv :
-    arg = '-y' if '-y' in sys.argv else '--year'
-    YEAR = int(sys.argv[sys.argv.index(arg) + 1])
+# argparse settings 
+description = """
+f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Formula 1 session.
+"""
 
-GP = None
-if '-t' in sys.argv or '--track' in sys.argv:
-    arg_track = '-t' if '-t' in sys.argv else '--track'
-    GP = sys.argv[sys.argv.index(arg_track) + 1]
-else:
-    GP = get_latest_race_name(ff.get_event_schedule(YEAR))
+parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
+parser.add_argument("-y", "--year", metavar="YEAR", type=int, help="The year of the session to analyze.")
+parser.add_argument("-t", "--track", metavar="TRACK", type=str, default=get_latest_race_name(ff.get_event_schedule(2022)), help="The track of the session to analyze. If not specified, the latest F1 weekend's track will be used.")
+parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display.")
+
+args = vars(parser.parse_args())
+
+print(args['year'])
+# retrieving the session specificities from cli args : year and track
+# YEAR = 2022
+# if '-y' in sys.argv or '--year' in sys.argv :
+#     arg = '-y' if '-y' in sys.argv else '--year'
+#     YEAR = int(sys.argv[sys.argv.index(arg) + 1])
+
+# GP = None
+# if '-t' in sys.argv or '--track' in sys.argv:
+#     arg_track = '-t' if '-t' in sys.argv else '--track'
+#     GP = sys.argv[sys.argv.index(arg_track) + 1]
+# else:
+#     GP = get_latest_race_name(ff.get_event_schedule(YEAR))
 
 # load session data / convert laptimes to seconds  
-race = ff.get_session(YEAR, GP, 'R')
+race = ff.get_session(YEAR, GP, 'Q')
 laps = race.load_laps()
 laps['LapTimeSeconds'] = laps['LapTime'].dt.total_seconds() 
 
@@ -107,7 +121,7 @@ for driver in drivers:
     poly = np.polyfit(driver_laps['LapNumber'], driver_laps['LapTimeSeconds'], 5)
     y_poly = np.poly1d(poly)(driver_laps['LapNumber'])
 
-    linestyle = '-' if team not in teams else ':'
+    linestyle = '.'
     # labels and headers
     ax[1].plot(x, y_poly, label=driver, color=ff.plotting.team_color(team), linestyle=linestyle)
     ax[1].set(ylabel='Laptime (seconds)')
@@ -134,4 +148,8 @@ if '-s' or '--save' in sys.argv:
         filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
         
     pyplot.savefig(filename, dpi=300)
-pyplot.show()
+    
+    
+# Checking if the user wants to see the plot or not.
+if not '-no' in sys.argv and not '--no-output' in sys.argv:
+    pyplot.show()
