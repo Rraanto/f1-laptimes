@@ -5,7 +5,6 @@ from matplotlib import pyplot
 from matplotlib.pyplot import figure
 from matplotlib import cm
 import numpy as np
-import sys 
 import os 
 from datetime import datetime as dt
 import argparse
@@ -46,9 +45,12 @@ f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Fo
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
 parser.add_argument("-y", "--year", metavar="YEAR", type=int, help="The year of the session to analyze.")
 parser.add_argument("-t", "--track", metavar="TRACK", type=str, default=get_latest_race_name(ff.get_event_schedule(2022)), help="The track of the session to analyze. If not specified, the latest F1 weekend's track will be used.")
+parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze. If not specified, all drivers will be used.")
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display.")
 
 args = vars(parser.parse_args())
+YEAR = args['year']
+GP = args['track']
 
 print(args['year'])
 # retrieving the session specificities from cli args : year and track
@@ -65,7 +67,7 @@ print(args['year'])
 #     GP = get_latest_race_name(ff.get_event_schedule(YEAR))
 
 # load session data / convert laptimes to seconds  
-race = ff.get_session(YEAR, GP, 'Q')
+race = ff.get_session(YEAR, GP, 'R')
 laps = race.load_laps()
 laps['LapTimeSeconds'] = laps['LapTime'].dt.total_seconds() 
 
@@ -83,18 +85,7 @@ laps.loc[laps['LapTimeSeconds'] < laptime_min, 'LapTimeSeconds'] = np.nan
 laps.loc[laps['LapTimeSeconds'] > laptime_max, 'LapTimeSeconds'] = np.nan
 
 # drivers to display
-DRIVERS = []
-if '-df' in sys.argv or '--drivers-file' in sys.argv:
-    arg = '-df' if '-df' in sys.argv else '--drivers-file'
-    filename = sys.argv[sys.argv.index(arg) + 1]
-    with open(filename, mode='r') as drivers_file:
-        for line in drivers_file.readlines():
-            DRIVERS.append(line.strip().upper())
-elif '-d' in sys.argv or '--drivers' in sys.argv:
-    arg = '-d' if '-d' in sys.argv else '--drivers'
-    DRIVERS = [txt.upper() for txt in sys.argv[sys.argv.index(arg) + 1].split(",")]
-else:
-    DRIVERS = [driver['Abbreviation'] for _, driver in race.results.iterrows()]
+DRIVERS = [driver.upper() for driver in args['drivers'].split(',')]
 
 # plotting 
 drivers = [driver for driver in DRIVERS]
@@ -121,7 +112,7 @@ for driver in drivers:
     poly = np.polyfit(driver_laps['LapNumber'], driver_laps['LapTimeSeconds'], 5)
     y_poly = np.poly1d(poly)(driver_laps['LapNumber'])
 
-    linestyle = '.'
+    linestyle = '-' if team not in teams else ':'
     # labels and headers
     ax[1].plot(x, y_poly, label=driver, color=ff.plotting.team_color(team), linestyle=linestyle)
     ax[1].set(ylabel='Laptime (seconds)')
@@ -137,19 +128,10 @@ if 'Haas F1 Team' in teams:
 fig.suptitle(f"{race.event['EventName']}")
 
 # save the plot in an image if the user says so 
-if '-s' or '--save' in sys.argv:
-    # if the -n or --name option is given, sets the filename to it, 
-    # default filename is country-sessiontype-year.png (e.g. austria-race-2022.png)
-    filename = ""
-    if '-n' in sys.argv or '--name' in sys.argv:
-        arg = '-n' if '-n' in sys.argv else '--name'
-        filename = f"{sys.argv[sys.argv.index(arg) + 1]}.png"
-    else:
-        filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
+filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
         
-    pyplot.savefig(filename, dpi=300)
+pyplot.savefig(filename, dpi=300)
     
     
 # Checking if the user wants to see the plot or not.
-if not '-no' in sys.argv and not '--no-output' in sys.argv:
-    pyplot.show()
+pyplot.show()
