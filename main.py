@@ -10,7 +10,7 @@ from datetime import datetime as dt
 import argparse
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
-print(CURRENT_PATH)
+print("path:", CURRENT_PATH)
 
 # enabling the ff1 cache
 done = False
