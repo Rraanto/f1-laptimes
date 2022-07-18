@@ -9,6 +9,8 @@ import os
 from datetime import datetime as dt
 import argparse
 
+CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+
 # enabling the ff1 cache
 done = False
 while not done:
@@ -128,7 +130,7 @@ fig.suptitle(f"{race.event['EventName']}")
 # save the figure 
 if args['save']:
     filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
-    pyplot.savefig(f"outputs/{filename}", dpi=300)
+    pyplot.savefig(f"outputs/{filename}" if os.path.isdir(os.path.join(CURRENT_PATH, 'outputs')) else filename, dpi=300)
 
     # add the file to the repository and commit change 
     os.system(f'git add outputs/{filename}')
@@ -138,3 +140,4 @@ if args['save']:
 # display the figure
 if not args['no_output']:
     pyplot.show()
+    
