@@ -124,12 +124,10 @@ if 'Haas F1 Team' in teams:
     ax[1].set_facecolor("grey")
     
 fig.suptitle(f"{race.event['EventName']}")
-
-# save the plot in an image if the user says so 
-filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
         
 # save the figure 
 if args['save']:
+    filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
     pyplot.savefig(f"outputs/{filename}", dpi=300)
 
     # add the file to the repository and commit change 
