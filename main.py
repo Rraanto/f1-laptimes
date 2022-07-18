@@ -140,7 +140,7 @@ if args['save']:
     # if backup option is enabled, create a backup of the file on the github remote repository
     if args['backup']:
         os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
-        with open(f'{CURRENT_PATH}/outputs/.history', mode='w') as history_file:
+        with open(f'outputs/.history', mode='w') as history_file:
             history_file.write(f"On {dt.now()} - backed up {filename}\n")
         os.system("git push")
     
