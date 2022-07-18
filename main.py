@@ -10,6 +10,7 @@ from datetime import datetime as dt
 import argparse
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
+print(CURRENT_PATH)
 
 # enabling the ff1 cache
 done = False
@@ -134,7 +135,7 @@ if args['save']:
 
     # add the file to the repository and commit change 
     os.system(f'git add outputs/{filename}')
-    os.system(f"""git commit -a -m "added {filename}" """)
+    os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
     os.system("git push")
     
 # display the figure
