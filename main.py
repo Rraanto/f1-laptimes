@@ -47,7 +47,7 @@ parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=dt.now().y
 parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(2022)), help="The track of the session to analyse, default is the latest available session in the year.")
 parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze, default is all drivers.")
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
-parser.add_argument("-s", "--save", metavar="SAVE", type=str, default="", help="Save the figure in a file. The filename will be the argument given, if any, otherwise the default is YEAR-SESSION-TRACK.png")
+parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file. The filename will be the argument given, if any, otherwise the default is YEAR-SESSION-TRACK.png")
 
 args = vars(parser.parse_args())
 YEAR = args['year']
