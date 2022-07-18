@@ -126,8 +126,12 @@ fig.suptitle(f"{race.event['EventName']}")
 # save the plot in an image if the user says so 
 filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
         
-pyplot.savefig(filename, dpi=300)
-    
+pyplot.savefig(f"outputs/{filename}", dpi=300)
+
+# add the file to the repository and commit change 
+os.system(f'git add outputs/{filename}')
+os.system(f"""git commit -a -m "added {filename}" """)
+os.system("git push")
     
 # Checking if the user wants to see the plot or not.
 pyplot.show()
