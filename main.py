@@ -136,6 +136,8 @@ if args['save']:
     # add the file to the repository and commit change 
     os.system(f'git add outputs/{filename}')
     os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
+    with open(f'{CURRENT_PATH}/outputs/.history', mode='w') as history_file:
+        history_file.write(f"On {dt.now()} - backed up {filename}")
     os.system("git push")
     
 # display the figure
