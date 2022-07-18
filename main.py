@@ -9,6 +9,18 @@ import os
 from datetime import datetime as dt
 import argparse
 
+# enabling the ff1 cache
+done = False
+while not done:
+    try:
+        ff.Cache.enable_cache('.cache/')
+        done = True
+    except NotADirectoryError:
+        os.mkdir
+
+# avoid pandas error
+pd.options.mode.chained_assignment = None
+
 
 def get_latest_race_name(schedule):
     """
@@ -23,19 +35,7 @@ def get_latest_race_name(schedule):
             latest = event
         else:
             return latest['EventName']
-
-
-# enabling the ff1 cache
-done = False
-while not done:
-    try:
-        ff.Cache.enable_cache('.cache/')
-        done = True
-    except NotADirectoryError:
-        os.mkdir
-
-# avoid pandas error
-pd.options.mode.chained_assignment = None
+        
 
 # argparse settings 
 description = """
@@ -43,31 +43,27 @@ f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Fo
 """
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
-parser.add_argument("-y", "--year", metavar="YEAR", type=int, help="The year of the session to analyze.")
-parser.add_argument("-t", "--track", metavar="TRACK", type=str, default=get_latest_race_name(ff.get_event_schedule(2022)), help="The track of the session to analyze. If not specified, the latest F1 weekend's track will be used.")
-parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze. If not specified, all drivers will be used.")
-parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display.")
+parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=dt.now().year, help="The year of the session to analyze, default is the current year.")
+parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(2022)), help="The track of the session to analyse, default is the latest available session in the year.")
+parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze, default is all drivers.")
+parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
 
 args = vars(parser.parse_args())
 YEAR = args['year']
-GP = args['track']
+schedule = ff.get_event_schedule(YEAR)
 
-print(args['year'])
-# retrieving the session specificities from cli args : year and track
-# YEAR = 2022
-# if '-y' in sys.argv or '--year' in sys.argv :
-#     arg = '-y' if '-y' in sys.argv else '--year'
-#     YEAR = int(sys.argv[sys.argv.index(arg) + 1])
+GP = None
+race = None
+session = 'R'
 
-# GP = None
-# if '-t' in sys.argv or '--track' in sys.argv:
-#     arg_track = '-t' if '-t' in sys.argv else '--track'
-#     GP = sys.argv[sys.argv.index(arg_track) + 1]
-# else:
-#     GP = get_latest_race_name(ff.get_event_schedule(YEAR))
+try :
+    GP = int(args['track'])
+    race = schedule.get_event_by_round(GP)
+except ValueError:
+    GP = args['track']
+    race = schedule.get_event_by_name(GP)
+race = race.get_session(session)
 
-# load session data / convert laptimes to seconds  
-race = ff.get_session(YEAR, GP, 'R')
 laps = race.load_laps()
 laps['LapTimeSeconds'] = laps['LapTime'].dt.total_seconds() 
 
