@@ -51,6 +51,7 @@ parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_na
 parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze, default is all drivers.")
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
 parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file.")
+parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
 parser.add_argument("-no", "--no-output", action='store_true', help="Don't display the figure.")
 
 args = vars(parser.parse_args())
@@ -135,10 +136,13 @@ if args['save']:
 
     # add the file to the repository and commit change 
     os.system(f'git add outputs/{filename}')
-    os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
-    with open(f'{CURRENT_PATH}/outputs/.history', mode='w') as history_file:
-        history_file.write(f"On {dt.now()} - backed up {filename}\n")
-    os.system("git push")
+    
+    # if backup option is enabled, create a backup of the file on the github remote repository
+    if args['backup']:
+        os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
+        with open(f'{CURRENT_PATH}/outputs/.history', mode='w') as history_file:
+            history_file.write(f"On {dt.now()} - backed up {filename}\n")
+        os.system("git push")
     
 # display the figure
 if not args['no_output']:
