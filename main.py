@@ -48,7 +48,7 @@ f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Fo
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
 parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=dt.now().year, help="The year of the session to analyze, default is the current year.")
 parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(dt.now().year)), help="The track of the session to analyse, default is the latest available session in the year.")
-parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", help="The drivers to analyze, default is all drivers.")
+parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", nargs='+', help="The drivers to analyze, default is all drivers.")
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
 parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file.")
 parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
@@ -86,16 +86,12 @@ laptime_min = q25 - (1.5 * inter)
 laps.loc[laps['LapTimeSeconds'] < laptime_min, 'LapTimeSeconds'] = np.nan
 laps.loc[laps['LapTimeSeconds'] > laptime_max, 'LapTimeSeconds'] = np.nan
 
-# drivers to display
-DRIVERS = [driver.upper() for driver in args['drivers'].split(',')]
-
 # plotting 
-drivers = [driver for driver in DRIVERS]
+drivers = [driver.upper() for driver in args['drivers']]
 teams = []
 
 # plot size configuration 
 pyplot.rcParams['figure.figsize'] = [10, 10]
-
 # subplots (average pace, lap-by-lap pace)
 fig, ax = pyplot.subplots(2)
 
