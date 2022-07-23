@@ -53,6 +53,7 @@ parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, h
 parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file.")
 parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
 parser.add_argument("-no", "--no-output", action='store_true', help="Don't display the figure.")
+parser.add_argument("--session", metavar="SESSION", type=str, default="R", help="The session of the weekend to analyze : R (race), Q (qualifying), FP1, FP2, FP3, S (sprint). Race is set by default")
 
 args = vars(parser.parse_args())
 YEAR = args['year']
@@ -60,7 +61,7 @@ schedule = ff.get_event_schedule(YEAR)
 
 GP = None
 race = None
-session = 'R'
+session = args['session']
 
 try :
     GP = int(args['track'])
