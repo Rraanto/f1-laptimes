@@ -54,6 +54,7 @@ parser.add_argument("-s", "--save", action='store_true', help="Save the figure i
 parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
 parser.add_argument("-no", "--no-output", action='store_true', help="Don't display the figure.")
 parser.add_argument("--session", metavar="SESSION", type=str, default="R", help="The session of the weekend to analyze : R (race), Q (qualifying), FP1, FP2, FP3, S (sprint). Race is set by default")
+parser.add_argument("--message", type=str, default="", help="Add custom message to the commit of a backup")
 
 args = vars(parser.parse_args())
 YEAR = args['year']
@@ -136,7 +137,8 @@ if args['save']:
     
     # if backup option is enabled, create a backup of the file on the github remote repository
     if args['backup']:
-        os.system(f"""git commit -a -m "Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" """)
+        message = f"Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" if args['message'] == "" else args['message']
+        os.system(f"""git commit -a -m "{message}" """)
         with open(f'outputs/.history', mode='w') as history_file:
             history_file.write(f"On {dt.now()} - backed up {filename}\n")
         os.system("git push")
