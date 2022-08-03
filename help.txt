@@ -1,0 +1,28 @@
+path: /Users/rantonyainarakotondrajoa/f1-laptimes
+usage: main.py [-h] [-y YEAR] [-t TRACK] [-d DRIVERS [DRIVERS ...]]
+               [-df DRIVERS_FILE] [-s] [-b] [-no] [--session SESSION]
+               [--message MESSAGE]
+
+f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Formula 1 session.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -y YEAR, --year YEAR  The year of the session to analyze, default is the
+                        current year.
+  -t TRACK, --track TRACK
+                        The track of the session to analyse, default is the
+                        latest available session in the year.
+  -d DRIVERS [DRIVERS ...], --drivers DRIVERS [DRIVERS ...]
+                        The drivers to analyze, default is all drivers.
+  -df DRIVERS_FILE, --drivers-file DRIVERS_FILE
+                        Path to a file containing a comma separated list of
+                        drivers to display. If both a file and a list of
+                        drivers are given as arguments, the file will be
+                        ignored
+  -s, --save            Save the figure in a file.
+  -b, --backup          Backup the image in the remote github repository.
+  -no, --no-output      Don't display the figure.
+  --session SESSION     The session of the weekend to analyze : R (race), Q
+                        (qualifying), FP1, FP2, FP3, S (sprint). Race is set
+                        by default
+  --message MESSAGE     Add custom message to the commit of a backup

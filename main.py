@@ -1,16 +1,15 @@
 import fastf1 as ff
-from fastf1 import plotting 
+from fastf1 import plotting
 import pandas as pd
 from matplotlib import pyplot
 from matplotlib.pyplot import figure
 from matplotlib import cm
 import numpy as np
-import os 
+import os
 from datetime import datetime as dt
 import argparse
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
-print("path:", CURRENT_PATH)
 
 # enabling the ff1 cache
 done = False
@@ -19,7 +18,7 @@ while not done:
         ff.Cache.enable_cache('.cache/')
         done = True
     except NotADirectoryError:
-        os.mkdir
+        os.mkdir(os.path.join(CURRENT_PATH, ".cache/"))
 
 # avoid pandas error
 pd.options.mode.chained_assignment = None
@@ -37,10 +36,10 @@ def get_latest_race_name(schedule):
         if event['EventDate'] < today_date:
             latest = event
         else:
-            return latest['EventName']
-        
+            return latest['EventName'] 
 
-# argparse settings 
+
+# argparse settings
 description = """
 f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Formula 1 session.
 """
@@ -48,7 +47,7 @@ f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Fo
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
 parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=dt.now().year, help="The year of the session to analyze, default is the current year.")
 parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(dt.now().year)), help="The track of the session to analyse, default is the latest available session in the year.")
-parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, default="", nargs='+', help="The drivers to analyze, default is all drivers.")
+parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, nargs='+', help="The drivers to analyze, default is all drivers.")
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
 parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file.")
 parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
@@ -64,7 +63,7 @@ GP = None
 race = None
 session = args['session']
 
-try :
+try:
     GP = int(args['track'])
     race = schedule.get_event_by_round(GP)
 except ValueError:
@@ -73,7 +72,7 @@ except ValueError:
 race = race.get_session(session)
 
 laps = race.load_laps()
-laps['LapTimeSeconds'] = laps['LapTime'].dt.total_seconds() 
+laps['LapTimeSeconds'] = laps['LapTime'].dt.total_seconds()
 
 # exclude pit stop laps 
 laps = laps.loc[(laps['PitOutTime'].isnull() & laps['PitInTime'].isnull())]
@@ -82,14 +81,17 @@ laps = laps.loc[(laps['PitOutTime'].isnull() & laps['PitInTime'].isnull())]
 # quantiles
 q75, q25 = laps['LapTimeSeconds'].quantile(0.75), laps['LapTimeSeconds'].quantile(0.25)
 inter = q75 - q25
-laptime_max = q75 + (1.5 * inter) 
+laptime_max = q75 + (1.5 * inter)
 laptime_min = q25 - (1.5 * inter)
 
 laps.loc[laps['LapTimeSeconds'] < laptime_min, 'LapTimeSeconds'] = np.nan
 laps.loc[laps['LapTimeSeconds'] > laptime_max, 'LapTimeSeconds'] = np.nan
 
 # plotting 
-drivers = [driver.upper() for driver in args['drivers']]
+if args['drivers']:
+    drivers = [driver.upper() for driver in args['drivers']]
+else:
+    drivers = [driver[1][2] for driver in race.results.iterrows()]
 teams = []
 
 # plot size configuration 
@@ -101,7 +103,7 @@ fig, ax = pyplot.subplots(2)
 laptimes = [laps.pick_driver(x)['LapTimeSeconds'].dropna() for x in drivers]
 ax[0].boxplot(laptimes, labels=drivers)
 ax[0].set_title('Average pace')
-ax[0].set(ylabel = 'Laptime (seconds)')
+ax[0].set(ylabel='Laptime (seconds)')
 
 # laptimes (lap-by-lap)
 for driver in drivers:
@@ -124,9 +126,9 @@ for driver in drivers:
 
 if 'Haas F1 Team' in teams:
     ax[1].set_facecolor("grey")
-    
+   
 fig.suptitle(f"{race.event['EventName']}")
-        
+       
 # save the figure 
 if args['save']:
     filename = f"{str(race.event['EventDate'])[:4]}-{race.event['Country']}-{race.name}.png"
@@ -134,16 +136,16 @@ if args['save']:
 
     # add the file to the repository and commit change 
     os.system(f'git add outputs/{filename}')
-    
+   
     # if backup option is enabled, create a backup of the file on the github remote repository
     if args['backup']:
         message = f"Plotted {str(race.event['EventDate'])[:4]} {race.event['Country']} Grand Prix {race.name} data" if args['message'] == "" else args['message']
         os.system(f"""git commit -a -m "{message}" """)
-        with open(f'outputs/.history', mode='w') as history_file:
+        with open('outputs/.history', mode='w') as history_file:
             history_file.write(f"On {dt.now()} - backed up {filename}\n")
         os.system("git push")
-    
+   
 # display the figure
 if not args['no_output']:
     pyplot.show()
-    
+   
