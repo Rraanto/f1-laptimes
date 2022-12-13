@@ -11,11 +11,13 @@ import argparse
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 
+
+
 # enabling the ff1 cache
 done = False
 while not done:
     try:
-        ff.Cache.enable_cache('.cache/')
+        ff.Cache.enable_cache('/Users/rantonyainarakotondrajoa/f1-laptimes/.cache')
         done = True
     except NotADirectoryError:
         os.mkdir(os.path.join(CURRENT_PATH, ".cache/"))
@@ -36,7 +38,7 @@ def get_latest_race_name(schedule):
         if event['EventDate'] < today_date:
             latest = event
         else:
-            return latest['EventName'] 
+            return latest['EventName']
 
 
 # argparse settings
@@ -54,6 +56,7 @@ parser.add_argument("-b", "--backup", action='store_true', help="Backup the imag
 parser.add_argument("-no", "--no-output", action='store_true', help="Don't display the figure.")
 parser.add_argument("--session", metavar="SESSION", type=str, default="R", help="The session of the weekend to analyze : R (race), Q (qualifying), FP1, FP2, FP3, S (sprint). Race is set by default")
 parser.add_argument("--message", type=str, default="", help="Add custom message to the commit of a backup")
+parser.add_argument("--clear-cache", action='store_true', help="clear the cache (before executing, the cache of the latest execution will be stored)")
 
 args = vars(parser.parse_args())
 YEAR = args['year']
