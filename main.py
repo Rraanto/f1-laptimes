@@ -110,22 +110,25 @@ ax[0].set(ylabel='Laptime (seconds)')
 
 # laptimes (lap-by-lap)
 for driver in drivers:
-    driver_laps = laps.pick_driver(driver)[['LapNumber', 'LapTimeSeconds', 'Team']]
-    driver_laps = driver_laps.dropna()
-    team = pd.unique(driver_laps['Team'])[0]
-    x = driver_laps['LapNumber']
-    poly = np.polyfit(driver_laps['LapNumber'], driver_laps['LapTimeSeconds'], 5)
-    y_poly = np.poly1d(poly)(driver_laps['LapNumber'])
+    try:
+        driver_laps = laps.pick_driver(driver)[['LapNumber', 'LapTimeSeconds', 'Team']]
+        driver_laps = driver_laps.dropna()
+        team = pd.unique(driver_laps['Team'])[0]
+        x = driver_laps['LapNumber']
+        poly = np.polyfit(driver_laps['LapNumber'], driver_laps['LapTimeSeconds'], 5)
+        y_poly = np.poly1d(poly)(driver_laps['LapNumber'])
 
-    linestyle = '-' if team not in teams else ':'
-    # labels and headers
-    ax[1].plot(x, y_poly, label=driver, color=ff.plotting.team_color(team), linestyle=linestyle)
-    ax[1].set(ylabel='Laptime (seconds)')
-    ax[1].set(xlabel='Lap')
+        linestyle = '-' if team not in teams else ':'
+        # labels and headers
+        ax[1].plot(x, y_poly, label=driver, color=ff.plotting.team_color(team), linestyle=linestyle)
+        ax[1].set(ylabel='Laptime (seconds)')
+        ax[1].set(xlabel='Lap')
 
-    ax[1].legend()
-    if team not in teams:
-        teams.append(team)
+        ax[1].legend()
+        if team not in teams:
+            teams.append(team)
+    except IndexError: 
+        pass
 
 if 'Haas F1 Team' in teams:
     ax[1].set_facecolor("grey")
