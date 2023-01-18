@@ -10,7 +10,7 @@ from datetime import datetime as dt
 import argparse
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
-
+LATEST_SEASON = 2022# have to update manually 
 
 
 # enabling the ff1 cache
@@ -35,10 +35,12 @@ def get_latest_race_name(schedule):
     today_date = dt.now()
     latest = None
     for _, event in schedule.iterrows():
-        if event['EventDate'] < today_date:
+        if event['EventDate'] < today_date or dt.now().year > LATEST_SEASON:
             latest = event
         else:
             return latest['EventName']
+    print(f"Latest race is : {latest['EventName']}")
+    return latest['EventName']
 
 
 # argparse settings
@@ -47,15 +49,25 @@ f1-laptimes is a tool for visualizing lap-by-lap pace and average pace over a Fo
 """
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=description)
-parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=dt.now().year, help="The year of the session to analyze, default is the current year.")
-parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(dt.now().year)), help="The track of the session to analyse, default is the latest available session in the year.")
+
+parser.add_argument("-y", "--year", metavar="YEAR", type=int, default=LATEST_SEASON, help="The year of the session to analyze, default is the current year.")
+
+parser.add_argument("-t", "--track", metavar="TRACK", default=get_latest_race_name(ff.get_event_schedule(LATEST_SEASON)), help="The track of the session to analyse, default is the latest available session in the year.")
+
 parser.add_argument("-d", "--drivers", metavar="DRIVERS", type=str, nargs='+', help="The drivers to analyze, default is all drivers.")
+
 parser.add_argument("-df", "--drivers-file", metavar="DRIVERS_FILE", type=str, help="Path to a file containing a comma separated list of drivers to display. If both a file and a list of drivers are given as arguments, the file will be ignored")
+
 parser.add_argument("-s", "--save", action='store_true', help="Save the figure in a file.")
+
 parser.add_argument("-b", "--backup", action='store_true', help="Backup the image in the remote github repository.")
+
 parser.add_argument("-no", "--no-output", action='store_true', help="Don't display the figure.")
+
 parser.add_argument("--session", metavar="SESSION", type=str, default="R", help="The session of the weekend to analyze : R (race), Q (qualifying), FP1, FP2, FP3, S (sprint). Race is set by default")
+
 parser.add_argument("--message", type=str, default="", help="Add custom message to the commit of a backup")
+
 parser.add_argument("--clear-cache", action='store_true', help="clear the cache (before executing, the cache of the latest execution will be stored)")
 
 args = vars(parser.parse_args())
